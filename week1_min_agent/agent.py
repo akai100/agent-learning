@@ -8,6 +8,7 @@ class Agent:
         self.tools = tools
         self.state = AgentState.INIT
         self.router = ToolRouter()
+        self.selector = ToolSelector(self.router)
         self.parser = ReActParser()
         self.max_steps = max_steps
 
@@ -26,22 +27,18 @@ class Agent:
             self.messages.append({"role": "assistant", "content": output})
             print(output)
 
-            try:
-                action = self.parser.parse(output)
-            except Exception as e:
-                print("❌ Parse error:", e)
-                self.state = AgentState.ERROR
-                break
+            proposal = self.parser.parse(output)
 
-            if action.is_done:
+            if proposal.is_done:
                 self.state = AgentState.DONE
                 print("\n✅ Agent finished")
                 return
 
             self.state = AgentState.ACTING
 
-            if not self.router.is_allowed(self.state, action.tool):
-                print(f"⛔ Tool '{action.tool}' not allowed in state {self.state.name}")
+            ok, reason = self.selector.validate(self.state, proposal)
+            if not ok:
+                print("⛔ Action rejected:", reason)
                 self.state = AgentState.ERROR
                 break
 

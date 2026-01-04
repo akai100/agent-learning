@@ -17,7 +17,30 @@ class Agent:
         ]
 
     def run(self, task: str):
-        self.messages.append({"role": "user", "content": task})
+        candidates = self.parser.parse(output)
+        
+        self.state = AgentState.ACTING
+        
+        candidate, reason = self.selector.select(self.state, candidates)
+        
+        if candidate is None:
+            print("⛔ No valid action:", reason)
+            self.state = AgentState.ERROR
+            break
+        
+        if candidate.is_done:
+            self.state = AgentState.DONE
+            print("\n✅ Agent finished")
+            return
+        
+        observation = self.tools.execute(candidate.tool, candidate.input)
+        obs_msg = f"Observation: {observation}"
+        
+        self.messages.append(
+            {"role": "system", "content": obs_msg}
+        )
+        print(obs_msg)
+        
         self.state = AgentState.THINKING
 
         for step in range(self.max_steps):

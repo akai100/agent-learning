@@ -19,4 +19,9 @@ Rules:
 Available tools:
 - calculator: evaluate a math expression
 - search_stub: look up information (simulated)
+
+You are provided with short-term memory from the system.
+Do not repeat failed or rejected actions.
+Use memory to make better decisions.
+
 """

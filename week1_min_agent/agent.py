@@ -13,6 +13,8 @@ class Agent:
         self.parser = ReActParser()
         self.max_steps = max_steps
         self.memory = ShortTermMemory()
+        self.retry_count = 0
+        self.max_retries = 2
 
         self.messages = [
             {"role": "system", "content": system_prompt}
@@ -58,7 +60,19 @@ class Agent:
             self.messages.append({"role": "assistant", "content": output})
             print(output)
 
-            proposal = self.parser.parse(output)
+            try:
+                candidates = self.parser.parse(output)
+            except Exception as e:
+                self.memory.record_error(str(e))
+                self.retry_count += 1
+            
+            if self.retry_count <= self.max_retries:
+                print("🔁 Retry due to parse error")
+                self.state = AgentState.RETRY
+                continue
+            else:
+                self.state = AgentState.ERROR
+                break
 
             if proposal.is_done:
                 self.state = AgentState.DONE
@@ -73,7 +87,20 @@ class Agent:
                 self.state = AgentState.ERROR
                 break
 
-            observation = self.tools.execute(action.tool, action.input)
+            try:
+                observation = self.tools.execute(candidate.tool, candidate.input)
+            except Exception as e:
+                self.memory.record_error(str(e))
+                self.retry_count += 1
+                
+                if self.retry_count <= self.max_retries:
+                    print("🔁 Retry due to tool error")
+                    self.state = AgentState.RETRY
+                    continue
+                else:
+                    self.state = AgentState.ERROR
+                    break
+
             obs_msg = f"Observation: {observation}"
 
             self.messages.append({"role": "system", "content": obs_msg})

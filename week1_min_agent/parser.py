@@ -3,10 +3,11 @@ from dataclasses import dataclass
 from typing import Optional
 
 @dataclass
-class AgentAction:
+class ActionProposal:
     tool: Optional[str]
     input: Optional[str]
     is_done: bool
+    confidence: float = 1.0
 
 
 class ReActParser:
@@ -26,4 +27,4 @@ class ReActParser:
             raise ValueError(f"Invalid Action format: {action}")
 
         tool, arg = action.split(":", 1)
-        return AgentAction(tool.strip(), arg.strip(), False)
+        return ActionProposal(tool.strip(), arg.strip(), False)

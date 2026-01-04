@@ -5,5 +5,6 @@ class AgentState(Enum):
     THINKING = auto()
     ACTING = auto()
     OBSERVING = auto()
+    RETRY = auto()
     DONE = auto()
     ERROR = auto()

@@ -1,49 +1,41 @@
-import re
-from prompt import SYSTEM_PROMPT
-from tools import TOOLS
+from parser import ReActParser
 
-class ReActAgent:
-  def __init__(self, llm_call):
-    self.llm_call = llm_call
-    self.messages = [
-        {"role": "system", "content": SYSTEM_PROMPT}
-    ]
+class Agent:
+    def __init__(self, llm, tools, system_prompt, max_steps=5):
+        self.llm = llm
+        self.tools = tools
+        self.parser = ReActParser()
+        self.max_steps = max_steps
 
-  def parse_action(self, text: str):
-    match = re.search(r"Action:\s*(.*)", text)
-    if not match:
-      return None, None
+        self.messages = [
+            {"role": "system", "content": system_prompt}
+        ]
 
-    action = match.group(1).strip()
-    if action == "NONE":
-      return "NONE", None
+    def run(self, task: str):
+        self.messages.append({"role": "user", "content": task})
 
-    if ":" in action:
-      tool, arg = action.split(":", 1)
-      return tool.strip(), arg.strip()
+        for step in range(self.max_steps):
+            print(f"\n=== Step {step + 1} ===")
 
-    return None, None
+            output = self.llm.call(self.messages)
+            print(output)
 
-def step(self, user_input: str):
-    self.messages.append({"role": "user", "content": user_input})
-    response = self.llm_call(self.messages)
+            self.messages.append({"role": "assistant", "content": output})
 
-    self.messages.append({"role": "assistant", "content": response})
-    print("\nAgent Output:\n", response)
+            action = self.parser.parse(output)
 
-    tool_name, tool_input = self.parse_action(response)
+            if action.is_done:
+                print("\n✅ Agent finished")
+                return
 
-    if tool_name == "NONE":
-        return False  # 结束
+            observation = self.tools.execute(action.tool, action.input)
+            obs_message = f"Observation: {observation}"
 
-    if tool_name in TOOLS:
-        observation = TOOLS[tool_name](tool_input)
-    else:
-        observation = f"Unknown tool: {tool_name}"
+            print(obs_message)
 
-    # 把 Observation 喂回模型
-    obs_text = f"Observation: {observation}"
-    self.messages.append({"role": "user", "content": obs_text})
-    print("\nObservation:\n", observation)
+            # Observation 是 system-level feedback
+            self.messages.append(
+                {"role": "system", "content": obs_message}
+            )
 
-    return True  # 继续
+        print("\n⛔ Max steps reached")

@@ -1,6 +1,7 @@
 from state import AgentState
 from router import ToolRouter
 from parser import ReActParser
+from memory import ShortTermMemory
 
 class Agent:
     def __init__(self, llm, tools, system_prompt, max_steps=5):
@@ -11,6 +12,7 @@ class Agent:
         self.selector = ToolSelector(self.router)
         self.parser = ReActParser()
         self.max_steps = max_steps
+        self.memory = ShortTermMemory()
 
         self.messages = [
             {"role": "system", "content": system_prompt}
@@ -45,6 +47,12 @@ class Agent:
 
         for step in range(self.max_steps):
             print(f"\n=== Step {step + 1} | State: {self.state.name} ===")
+            memory_summary = self.memory.summary()
+            if memory_summary:
+                self.messages.append({
+                    "role": "system",
+                    "content": f"Short-term memory:\n{memory_summary}"
+                })
 
             output = self.llm.call(self.messages)
             self.messages.append({"role": "assistant", "content": output})

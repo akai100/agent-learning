@@ -1,30 +1,47 @@
 import re
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 @dataclass
-class ActionProposal:
+class ActionCandidate:
     tool: Optional[str]
     input: Optional[str]
     is_done: bool
-    confidence: float = 1.0
 
 
 class ReActParser:
-    ACTION_RE = re.compile(r"Action:\s*(.*)")
+    ACTION_BLOCK_RE = re.compile(
+        r"Action Candidates:(.*)", re.DOTALL
+    )
+    LINE_RE = re.compile(r"\d+\.\s*(.*)")
 
-    def parse(self, text: str) -> AgentAction:
-        match = self.ACTION_RE.search(text)
-        if not match:
-            raise ValueError("No Action found in model output")
+    def parse(self, text: str) -> List[ActionCandidate]:
+        block_match = self.ACTION_BLOCK_RE.search(text)
+        if not block_match:
+            raise ValueError("No Action Candidates block found")
 
-        action = match.group(1).strip()
+        block = block_match.group(1)
+        lines = self.LINE_RE.findall(block)
 
-        if action == "NONE":
-            return AgentAction(None, None, True)
+        candidates = []
 
-        if ":" not in action:
-            raise ValueError(f"Invalid Action format: {action}")
+        for line in lines:
+            line = line.strip()
+            if line == "NONE":
+                candidates.append(
+                    ActionCandidate(None, None, True)
+                )
+                continue
 
-        tool, arg = action.split(":", 1)
-        return ActionProposal(tool.strip(), arg.strip(), False)
+            if ":" not in line:
+                continue
+
+            tool, arg = line.split(":", 1)
+            candidates.append(
+                ActionCandidate(tool.strip(), arg.strip(), False)
+            )
+
+        if not candidates:
+            raise ValueError("No valid action candidates parsed")
+
+        return candidates

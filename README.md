@@ -1,10 +1,10 @@
-**第 1 周：LLM & Agent 基础认知**
+## 第 1 周：LLM & Agent 基础认知
 
-**目标**
+### 目标
 
 理解 Agent 是什么、能做什么、和普通 Chatbot 的区别。
 
-**必学**
+### 必学
 
 + LLM 基本原理（Transformer / Token / Context）
 
@@ -14,25 +14,25 @@
 
 + OpenAI / Claude / 本地模型 API 调用
 
-**实战**
+### 实战
 
 + 写一个 CLI Chatbot
 
 + 手写 ReAct Prompt
 
-**产出**
+### 产出
 
 + ```react_chatbot.py```
 
 + 一篇笔记：《Agent ≠ Chatbot》
 
-**第 2 周：Prompt Engineering & Reasoning**
+## 第 2 周：Prompt Engineering & Reasoning
 
-**目标**
+### 目标
 
 让模型“会思考、少胡说”。
 
-**必学**
+### 必学
 
 + Chain of Thought
 
@@ -42,13 +42,13 @@
 
 + 防 Prompt Injection
 
-**实战**
+### 实战
 
 + 多版本 Prompt 对比实验
 
 + 设计一个“问题拆解 Prompt”
 
-**产出**
+### 产出
 
 + Prompt 模板库
 

@@ -20,3 +20,22 @@ def calculate_repair_cost(parts_cost: float, labor_hours: float) -> str:
 print(calculate_repair_cost.name)  # 输出: calculate_repair_cost
 print(calculate_repair_cost.description)  # 输出: 计算车辆维修的总费用...
 ```
+
+## 高阶用法：处理复杂输入
+
+如果你的工具参数非常复杂（例如需要验证日期格式、限制数值范围），建议配合 Pydantic 使用 args_schema 参数。
+
+```python3
+from pydantic import BaseModel, Field
+
+class DamageInput(BaseModel):
+    part_name: str = Field(description="受损部件名称，如 '前保险杠'")
+    severity: int = Field(description="损毁程度，范围 1-10", ge=1, le=10)
+
+@tool(args_schema=DamageInput)
+def analyze_damage_logic(part_name: str, severity: int) -> str:
+    """根据部件和损毁等级判定维修策略。"""
+    if severity > 7:
+        return f"{part_name} 损毁严重，建议更换。"
+    return f"{part_name} 建议修复。"
+```
